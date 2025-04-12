@@ -3,7 +3,7 @@ from datetime import datetime
 import time
 import os
 
-# Create directory to store images if it doesn't exist
+# Create directory to store images if it doesn't exist 
 working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\global_wiper_final\\"
 # Read path from file
 with open("global_wiper_final/working_dir.txt", "r") as f:
