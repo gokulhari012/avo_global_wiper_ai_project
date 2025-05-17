@@ -6,7 +6,8 @@ import os
 # Create directory to store images if it doesn't exist 
 working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\global_wiper_final\\"
 # Read path from file
-with open("global_wiper_final/working_dir.txt", "r") as f:
+# with open("global_wiper_final/working_dir.txt", "r") as f:
+with open("working_dir.txt", "r") as f:
     working_dir_path = f.read().strip()
 save_dir = working_dir_path+"captured_images"
 os.makedirs(save_dir, exist_ok=True)
@@ -23,7 +24,8 @@ picam2.start()
 time.sleep(2)  # Wait for camera to adjust
 
 # Generate filename with timestamp
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+# timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+timestamp = "None"
 filename = f"{save_dir}/image_{timestamp}.jpg"
 
 # Capture the image

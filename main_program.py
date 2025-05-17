@@ -30,7 +30,7 @@ gpio_output_pin = 21
 # working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\Global_Wiper\anamoly_detection\\"
 working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\global_wiper_final\\"
 # Read path from file
-with open("global_wiper_final/working_dir.txt", "r") as f:
+with open("working_dir.txt", "r") as f:
     working_dir_path = f.read().strip()
 
 # working_dir_path = r""
@@ -83,6 +83,7 @@ def list_files_in_directory(directory):
 def annomoly_detection():
     annomoly_detected = False
     cropped_image_list = list_files_in_directory(cropped_image_path)
+    i = 1
     for path in cropped_image_list:
         img = Image.open(path).convert("RGB")
         img_tensor = transform(img).unsqueeze(0).to(device)
@@ -98,6 +99,8 @@ def annomoly_detection():
         # Measure end time
         end_time = time.time()
 
+        print("Brush No:"+str(i))
+        i=i+1
         # Compute prediction time
         prediction_time = end_time - start_time
         print(f"Prediction Time: {prediction_time:.4f} seconds")
@@ -107,14 +110,16 @@ def annomoly_detection():
         print(f"Prediction: {label} (Confidence: {confidence:.2f})")
         if label=="Anomaly":
             annomoly_detected = True
-            break
+            #break
 
     write_output(annomoly_detected)
 
 def write_output(annomoly_detected):
     if annomoly_detected:
+        print("Bad camper detected")
         gpio_ouput.on() #relay off
     else:
+        print("Good camper detected")
         gpio_ouput.off() #relay on
     sleep(1)
 
@@ -124,6 +129,7 @@ def gpio_callback():
     global gpio_input_trigger
     gpio_input_trigger = True
     print("📶 GPIO 23 HIGH")
+    print("Program triggered")
 
 gpio_trigger.when_pressed = gpio_callback
 
@@ -133,9 +139,11 @@ def capture_image(frame):
     # Launch crop UI
     root = tk.Tk()
     app = LineDrawer(root, image)
-    root.mainloop()
+    app.save_crops()
+    app.call_destroy()
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = "None"
     filename = os.path.join(save_folder, f"image_{timestamp}.jpg")
     print(f"📸 Capturing image: {filename}")
     image = picam2.capture_array()
@@ -194,7 +202,6 @@ class LineDrawer:
 
         self.save_folder = save_folder
         self.load_line_positions_from_json()
-        self.save_crops()
 
     def on_click(self, event):
         canvas_x = self.canvas.canvasx(event.x)
@@ -237,7 +244,7 @@ class LineDrawer:
             x1 = x_positions[0]
             x2 = x_positions[1]
             crop = image_cv[y1:y2, x1:x2]
-            filename = os.path.join(self.save_folder, f"crop_{i+1}.jpg")
+            filename = os.path.join(self.save_folder, f"crop_{i+1}.png")
             cv2.imwrite(filename, crop)
         self.save_line_positions_to_json()
 
@@ -268,6 +275,9 @@ class LineDrawer:
         except Exception as e:
             print(f"⚠️ Failed to load saved line positions: {e}")
 
+    def call_destroy(self):
+        self.root.destroy()
+        
 def opencv_to_pil(frame):
     return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
@@ -277,13 +287,15 @@ def capture_from_camera():
     print("🎥 Press 'c' to capture a frame, or 'q' to quit.")
     while True:
         frame = picam2.capture_array()
-        cv2.imshow("Live Camera (Press 'c' to capture)", frame)
+        # Resize frame to 640x480
+        resized_frame = cv2.resize(frame, (640, 480))
+        cv2.imshow("Live Camera (Press 'c' to capture 'q' to quit)", resized_frame)
         key = cv2.waitKey(1) & 0xFF
-        if key == ord('c') or gpio_input_trigger:
+        if key == ord('c') or key == ord('C') or gpio_input_trigger:
             capture_image(frame)
             annomoly_detection()
             gpio_input_trigger = False
-        elif key == ord('q'):
+        elif key == ord('q') or key == ord('Q'):
             print("❌ Quit")
             picam2.stop()
             cv2.destroyAllWindows()

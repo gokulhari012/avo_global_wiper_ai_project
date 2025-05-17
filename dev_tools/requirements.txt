@@ -13,3 +13,11 @@ sudo apt install libcamera0
 
 sudo apt install libcamera-apps
 pip3 install opencv-python pillow
+
+#relay gpio check
+gpioset gpiochip4 21=1
+gpioset gpiochip4 21=0
+
+#make executable file
+chmod +x Global_wiper_run.sh
+sudo ./Global_wiper_run.sh

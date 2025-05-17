@@ -1,1 +1,1 @@
-C:\Users\gokul\Documents\projects\avo global wiper\global_wiper_final\\
+/home/pi/Desktop/global_wiper/

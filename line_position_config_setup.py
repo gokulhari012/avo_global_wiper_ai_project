@@ -7,7 +7,8 @@ import json
 
 working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\global_wiper_final\\"
 # Read path from file
-with open("global_wiper_final/working_dir.txt", "r") as f:
+# with open("global_wiper_final/working_dir.txt", "r") as f:
+with open("working_dir.txt", "r") as f:
     working_dir_path = f.read().strip()
 line_positions_json_file = working_dir_path+"line_positions.json"
 cropped_image_path = working_dir_path+"cropped_images"
@@ -145,7 +146,9 @@ class LineDrawer:
             print(f"⚠️ Failed to load saved line positions: {e}")
 
 def main():
-    image_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
+
+    # image_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
+    image_path = working_dir_path + "captured_images/image_None.jpg"
     if not image_path:
         return
 
