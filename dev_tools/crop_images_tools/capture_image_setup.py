@@ -3,13 +3,21 @@ from datetime import datetime
 import time
 import os
 
+brush = "good"
+# brush = "bad"
+
 # Create directory to store images if it doesn't exist 
 working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\global_wiper_final\\"
 # Read path from file
 # with open("global_wiper_final/working_dir.txt", "r") as f:
 with open("working_dir.txt", "r") as f:
     working_dir_path = f.read().strip()
-save_dir = working_dir_path+"captured_images"
+
+if brush=="good":
+    save_dir = working_dir_path+r"original_images\good"
+else:
+    save_dir = working_dir_path+r"original_images\bad"
+
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize the camera
@@ -24,8 +32,8 @@ picam2.start()
 time.sleep(2)  # Wait for camera to adjust
 
 # Generate filename with timestamp
-# timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-timestamp = "None"
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+# timestamp = "None"
 filename = f"{save_dir}/image_{timestamp}.jpg"
 
 # Capture the image

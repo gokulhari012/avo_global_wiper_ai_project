@@ -1,0 +1,10 @@
+Steps 
+
+1.set working directory path in working_dir.txt
+2.set brush="good" or "bad" inside .py program file
+
+1. run -> capture_images_setup.py - to capture images(good and bad)
+2. run -> line_position_config_setup.py - to configure the line
+3. crop_script.py -> to read all the image in original images to cropped images
+
+

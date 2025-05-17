@@ -2,31 +2,18 @@ import cv2
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
-import time
 import os
-from gpiozero import Button
-from gpiozero import LED
-from time import sleep
-from signal import pause
-from threading import Thread
-from datetime import datetime
-from picamera2 import Picamera2
+
 import json
 # Convert OpenCV frame to PIL
 from PIL import Image
 import numpy as np
-
-import torch
-import matplotlib.pyplot as plt
-from torchvision import transforms
-from utils.model import CustomVGG
-from utils.constants import INPUT_IMG_SIZE, NEG_CLASS
-
-# Optional: use cv2.VideoCapture(0) if you're not on Raspberry Pi
+from datetime import datetime
 
 
-gpio_input_trigger_pin = 23
-gpio_output_pin = 21
+brush = "good"
+# brush = "bad"
+
 # working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\Global_Wiper\anamoly_detection\\"
 working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\global_wiper_final\\"
 # Read path from file
@@ -35,38 +22,16 @@ with open("working_dir.txt", "r") as f:
 
 # working_dir_path = r""
 line_positions_json_file = working_dir_path+"line_positions.json"
-cropped_image_path = working_dir_path+"cropped_images"
-save_folder = working_dir_path+"captured_images"
 
-os.makedirs(save_folder, exist_ok=True)
+if brush=="good":
+    cropped_image_path = working_dir_path+"cropped_images\good"
+    original_image_path = working_dir_path+"original_images\good"
+else:
+    cropped_image_path = working_dir_path+r"cropped_images\bad"
+    original_image_path = working_dir_path+r"original_images\bad"
+
+os.makedirs(original_image_path, exist_ok=True)
 os.makedirs(cropped_image_path, exist_ok=True)
-
-# Setup GPIO
-gpio_trigger = Button(gpio_input_trigger_pin)
-# Initialize pin 21 as an LED (can be used as output)
-gpio_ouput = LED(gpio_output_pin)
-gpio_input_trigger = False
-
-# Setup Camera
-picam2 = Picamera2()
-# picam2.preview_configuration.main.size = (1280, 720)
-picam2.preview_configuration.main.size = (4056, 3040)
-picam2.preview_configuration.main.format = "RGB888"
-picam2.configure("preview")
-picam2.start()
-
-#________________Annomaly Detection_______________________
-# Load the trained model
-device = torch.device("cpu")
-model_path = working_dir_path+"weights/carbonbrush_model_2.h5"  # Update with your actual model path
-model = torch.load(model_path, map_location=device, weights_only=False)
-model.eval()
-
-# Define the preprocessing pipeline
-transform = transforms.Compose([
-    transforms.Resize(INPUT_IMG_SIZE),
-    transforms.ToTensor(),
-])
 
 def list_files_in_directory(directory):
     # Get the list of files in the directory
@@ -79,75 +44,6 @@ def list_files_in_directory(directory):
             cropped_image_list.append(full_path)
             # print(full_path)
     return cropped_image_list
-
-def annomoly_detection():
-    annomoly_detected = False
-    cropped_image_list = list_files_in_directory(cropped_image_path)
-    i = 1
-    for path in cropped_image_list:
-        img = Image.open(path).convert("RGB")
-        img_tensor = transform(img).unsqueeze(0).to(device)
-        # Measure start time
-        start_time = time.time()
-
-        # Run the model
-        with torch.no_grad():
-            probs, heatmap = model(img_tensor)
-            pred_class = torch.argmax(probs, dim=-1).item()
-            confidence = torch.max(probs).item()
-
-        # Measure end time
-        end_time = time.time()
-
-        print("Brush No:"+str(i))
-        i=i+1
-        # Compute prediction time
-        prediction_time = end_time - start_time
-        print(f"Prediction Time: {prediction_time:.4f} seconds")
-
-        # Display classification result
-        label = "Good" if pred_class != NEG_CLASS else "Anomaly"
-        print(f"Prediction: {label} (Confidence: {confidence:.2f})")
-        if label=="Anomaly":
-            annomoly_detected = True
-            #break
-
-    write_output(annomoly_detected)
-
-def write_output(annomoly_detected):
-    if annomoly_detected:
-        print("Bad camper detected")
-        gpio_ouput.on() #relay off
-    else:
-        print("Good camper detected")
-        gpio_ouput.off() #relay on
-    sleep(1)
-
-#________________Capturing Image and crop_______________________
-# Capture on GPIO trigger
-def gpio_callback():
-    global gpio_input_trigger
-    gpio_input_trigger = True
-    print("📶 GPIO 23 HIGH")
-    print("Program triggered")
-
-gpio_trigger.when_pressed = gpio_callback
-
-def capture_image(frame):
-    print("📸 Captured frame")
-    image = opencv_to_pil(frame)
-    # Launch crop UI
-    root = tk.Tk()
-    app = LineDrawer(root, image)
-    app.save_crops()
-    app.call_destroy()
-    
-    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    timestamp = "None"
-    filename = os.path.join(save_folder, f"image_{timestamp}.jpg")
-    print(f"📸 Capturing image: {filename}")
-    image = picam2.capture_array()
-    cv2.imwrite(filename, image)
 
 class LineDrawer:
     def __init__(self, root, image, save_folder=cropped_image_path):
@@ -244,7 +140,10 @@ class LineDrawer:
             x1 = x_positions[0]
             x2 = x_positions[1]
             crop = image_cv[y1:y2, x1:x2]
-            filename = os.path.join(self.save_folder, f"crop_{i+1}.png")
+            # Generate filename with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            # timestamp = "None"
+            filename = os.path.join(self.save_folder, f"crop_{i+1}_{timestamp}.png")
             cv2.imwrite(filename, crop)
         #self.save_line_positions_to_json()
 
@@ -281,25 +180,15 @@ class LineDrawer:
 def opencv_to_pil(frame):
     return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
-#________________Camera Live Preview_______________________
-def capture_from_camera():
-    global gpio_input_trigger
-    print("🎥 Press 'c' to capture a frame, or 'q' to quit.")
-    while True:
-        frame = picam2.capture_array()
-        # Resize frame to 640x480
-        resized_frame = cv2.resize(frame, (640, 480))
-        cv2.imshow("Live Camera (Press 'c' to capture 'q' to quit)", resized_frame)
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('c') or key == ord('C') or gpio_input_trigger:
-            capture_image(frame)
-            annomoly_detection()
-            gpio_input_trigger = False
-        elif key == ord('q') or key == ord('Q'):
-            print("❌ Quit")
-            picam2.stop()
-            cv2.destroyAllWindows()
-            break
+def run_crop_script():
+    original_image_list = list_files_in_directory(original_image_path)
+    for path in original_image_list:
+        root = tk.Tk()
+        frame = cv2.imread(path)
+        image = opencv_to_pil(frame)
+        app = LineDrawer(root, image)
+        app.save_crops()
+        app.call_destroy()
 
 if __name__ == "__main__":
-    capture_from_camera()
+    run_crop_script()
