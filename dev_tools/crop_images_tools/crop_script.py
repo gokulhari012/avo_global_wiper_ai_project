@@ -10,12 +10,8 @@ from PIL import Image
 import numpy as np
 from datetime import datetime
 
-
-brush = "good"
-# brush = "bad"
-
 # working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\Global_Wiper\anamoly_detection\\"
-working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\global_wiper_final\\"
+working_dir_path = r"C:\Users\gokul\Documents\projects\avo global wiper\Images crop\crop_images_tools"
 # Read path from file
 with open("working_dir.txt", "r") as f:
     working_dir_path = f.read().strip()
@@ -23,15 +19,17 @@ with open("working_dir.txt", "r") as f:
 # working_dir_path = r""
 line_positions_json_file = working_dir_path+"line_positions.json"
 
-if brush=="good":
-    cropped_image_path = working_dir_path+"cropped_images\good"
-    original_image_path = working_dir_path+"original_images\good"
-else:
-    cropped_image_path = working_dir_path+r"cropped_images\bad"
-    original_image_path = working_dir_path+r"original_images\bad"
+original_good_image_path = working_dir_path+r"original_images\good"
+cropped_good_image_path = working_dir_path+r"cropped_images\good"
 
-os.makedirs(original_image_path, exist_ok=True)
-os.makedirs(cropped_image_path, exist_ok=True)
+original_bad_image_path = working_dir_path+r"original_images\bad"
+cropped_bad_image_path = working_dir_path+r"cropped_images\bad"
+
+os.makedirs(original_good_image_path, exist_ok=True)
+os.makedirs(cropped_good_image_path, exist_ok=True)
+
+os.makedirs(original_bad_image_path, exist_ok=True)
+os.makedirs(cropped_bad_image_path, exist_ok=True)
 
 def list_files_in_directory(directory):
     # Get the list of files in the directory
@@ -46,7 +44,7 @@ def list_files_in_directory(directory):
     return cropped_image_list
 
 class LineDrawer:
-    def __init__(self, root, image, save_folder=cropped_image_path):
+    def __init__(self, root, image, save_folder):
         self.root = root
         self.root.title("Crop Tool")
 
@@ -180,15 +178,17 @@ class LineDrawer:
 def opencv_to_pil(frame):
     return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
-def run_crop_script():
+def run_crop_script(original_image_path, cropped_imge_path):
     original_image_list = list_files_in_directory(original_image_path)
+    print(original_image_list)
     for path in original_image_list:
         root = tk.Tk()
         frame = cv2.imread(path)
         image = opencv_to_pil(frame)
-        app = LineDrawer(root, image)
+        app = LineDrawer(root, image, cropped_imge_path)
         app.save_crops()
         app.call_destroy()
 
 if __name__ == "__main__":
-    run_crop_script()
+    run_crop_script(original_good_image_path, cropped_good_image_path)
+    run_crop_script(original_bad_image_path, cropped_bad_image_path)

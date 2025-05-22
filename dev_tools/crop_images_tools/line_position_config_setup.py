@@ -146,9 +146,8 @@ class LineDrawer:
             print(f"⚠️ Failed to load saved line positions: {e}")
 
 def main():
-
-    # image_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
-    image_path = working_dir_path + "captured_images/image_None.jpg"
+    image_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
+    # image_path = working_dir_path + "captured_images/image_None.jpg"
     if not image_path:
         return
 
