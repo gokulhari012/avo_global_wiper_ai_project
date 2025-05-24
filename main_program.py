@@ -54,11 +54,12 @@ picam2.preview_configuration.main.size = (4056, 3040)
 picam2.preview_configuration.main.format = "RGB888"
 picam2.configure("preview")
 picam2.start()
+picam2.set_controls({ "ExposureTime":150000, "AeEnable":False, "AwbEnable":False})
 
 #________________Annomaly Detection_______________________
 # Load the trained model
 device = torch.device("cpu")
-model_path = working_dir_path+"weights/carbonbrush_model_2.h5"  # Update with your actual model path
+model_path = working_dir_path+"weights/carbonbrush_model_3.h5"  # Update with your actual model path
 model = torch.load(model_path, map_location=device, weights_only=False)
 model.eval()
 
@@ -239,8 +240,8 @@ class LineDrawer:
         image_cv = cv2.cvtColor(np.array(self.original_image), cv2.COLOR_RGB2BGR)
 
         for i in range(10):
-            y1 = y_positions[i+1]
-            y2 = y_positions[i+1 + 1]
+            y1 = y_positions[i+1] + 10
+            y2 = y_positions[i+1 + 1] - 10
             x1 = x_positions[0]
             x2 = x_positions[1]
             crop = image_cv[y1:y2, x1:x2]
